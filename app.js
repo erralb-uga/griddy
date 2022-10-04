@@ -1,14 +1,10 @@
 var globalStartTime = performance.now(); //calculate performance
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//Program initialization
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 //Global variables
 
 //start and finish nodes. Could be chosen dynamically
-var startingNode;
-var goalNode;
+var startingNode; //to store the DOM starting node
+var goalNode; //to store the DOM finishing node
 var gr; //gc == goal column
 var gc; //gr == goal row,
 
@@ -17,38 +13,29 @@ var start = 2;
 var finish = 77;
 var gridWidth = 10;
 var gridHeight = 10;
-// var start = 22;
-// var finish = 347;
-// var gridWidth = 20;
-// var gridHeight = 20;
 
-//To store last clicked element. Not necessary but could prove useful
-var lastClicked;
 
-//We call the clickableGrid function and store the result in the grid variable
-//@param : function : the callback function, called on a node click, defined in the clickableGrid() function
-var grid = clickableGrid(gridWidth, gridHeight, function (node, row, col, i) {
-
-  // console.log('You clicked on : element: ', el, ' row: ', row, ' col: ', col, ' #item', i); //Infos on the clicked node
-  // console.log('Neighbors : ', getNeighbors(el, row, col, i)); //call the getNeighbors function
-
-  if (i != start && i != finish) { //if clicked node is different from start or finish, we toggle the .wall CSS class
-    node.classList.toggle('wall');
-    node.toggleAttribute('notwalkable');
-    //if (lastClicked) lastClicked.className='';
-    lastClicked = node;
-  }
-
-}, gridId = 'grid1', hasCost = false); 
+//We call the clickableGrid function and store the result in a grid variable
+var grid = clickableGrid(gridWidth, gridHeight, myCallback);
 
 //we append the generated grid to the <div id="grid-container"> tag
 document.getElementById('grid-container').appendChild(grid);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//Clickable grid function
+//Callback function (called on a cell click)
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function myCallback(node, row, col, i) {
+  if (i != start && i != finish) {
+    node.toggleAttribute('notwalkable');
+  }
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-//It generates an HTML <table> which triggers a function when a <td> (our nodes) is clicked
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//Clickable grid function
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//It generates an HTML / DOM <table> which triggers a function when a <td> (our nodes) is clicked
 function clickableGrid(rows, cols, callback, gridId = 'grid1', hasCost = false) {
 
   let i = 0; //nodes #ID
@@ -56,10 +43,10 @@ function clickableGrid(rows, cols, callback, gridId = 'grid1', hasCost = false) 
   htmlTableGrid.className = 'grid'; //add the CSS class .grid to the <table> element
   htmlTableGrid.id = gridId;
 
-  for (let r = 0; r < rows; ++r) { //for each row
+  for (let c = 0; c < cols; ++c) { //for each column
     let tr = htmlTableGrid.appendChild(document.createElement('tr')); //we create a <tr>
 
-    for (let c = 0; c < cols; ++c) { //for each column
+    for (let r = 0; r < rows; ++r) { //for each row
 
       let node = tr.appendChild(document.createElement('td')); //we create a <td> (our nodes)
 
@@ -68,24 +55,24 @@ function clickableGrid(rows, cols, callback, gridId = 'grid1', hasCost = false) 
       node.setAttribute('col', c); //we set a col attribute with the col value
 
       let cost = 1;
-      if(hasCost) cost = Math.floor(Math.random() * 9)+1; //random cost between 1 and 10
+      if (hasCost) cost = Math.floor(Math.random() * 9) + 1; //random cost between 1 and 10
       node.setAttribute('cost', cost); //we set a cost attributes
 
-      node.innerHTML = cost+'<br>'+'[' + r + ',' + c + ']'; //What we display in the <td>
+      node.innerHTML = cost + '<br>' + '[' + r + ',' + c + ']'; //What we display in the <td>
 
       //Starting and Finishing nodes
       if (i == start) {
         node.innerHTML = 'S';
         node.classList.add('start'); //if starting node, give the .start CSS class
         startingNode = node; //global variable
-      } 
+      }
       if (i == finish) {
         node.innerHTML = 'F';
         node.classList.add('finish'); //if finish node, give the .finish CSS class
         goalNode = node;  //global variable
         gr = parseInt(goalNode.attributes.row.value);  //global variable
         gc = parseInt(goalNode.attributes.col.value);  //global variable
-      } 
+      }
 
       //We add an event listener on the node
       //The click event will trigger a callback function
@@ -135,22 +122,22 @@ function getNodeNeighbors(node, gridId = 'grid1') {
   //current node row and col
   let row = parseInt(node.getAttribute('row'));
   let col = parseInt(node.getAttribute('col'));
-  
+
   let neighbor; //local variable
 
   if (row - 1 >= 0) { //The neighbor above our current node should exist in the grid
     neighbor = document.querySelector('#' + gridId + ' td[row="' + (row - 1) + '"][col="' + col + '"]');
     if (neighbor && !neighbor.hasAttribute('notwalkable')) neighbors.push(neighbor); //if the neighbor exist and is not a wall
   }
-  
+
   //needs to be completed for all neighbors
-  
+
   return neighbors;
 }
 
 //Draw the path, for when the goal is found
 function drawPath(node) {
-  while(node.hasAttribute('parent')) {
+  while (node.hasAttribute('parent')) {
     node.classList.add('path');
     node = document.getElementById(node.getAttribute('parent'));
   }
@@ -158,11 +145,11 @@ function drawPath(node) {
 
 //reset grid before calling a search algorithm
 function clearGrid() {
-  grid.querySelectorAll('td').forEach(td => { 
+  grid.querySelectorAll('td').forEach(td => {
     td.removeAttribute('visited');
     td.removeAttribute('parent');
-    td.classList.remove('path'); 
-  }); 
+    td.classList.remove('path');
+  });
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,9 +178,13 @@ function bfs(grid, start, finish) {
     // console.log('Queue:', queue);
     // console.log('Visited', visited);
 
-    let currentNode = queue.shift(); // .shift() removes the first element of queue
+    let currentNode = queue.shift(); // .shift() removes and returns the first element of queue
 
-    //...
+    // get neighboring nodes
+      //explore neighbors
+      //add neighbors to queue and visited ?
+      //set DOM attribute 'visited' to true
+      //set DOM attribute 'parent' to current node -> needed to draw path at the end
   }
 
   let endTime = performance.now();
@@ -207,7 +198,7 @@ function dfs(grid, start, finish) {
 
   let startTime = performance.now(); //for performance stats
   let nodesVisited = 1; //for stats
-  
+
   //...
 
   let endTime = performance.now();
